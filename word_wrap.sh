@@ -2,7 +2,7 @@
 
 TEXT=("")
 buffer=
-MAX_WIDTH=36
+MAX_WIDTH=39
 
 get_text() {
     while read -ru 0 -n 1; do
@@ -10,8 +10,11 @@ get_text() {
         case $read_reply in
             # Backspace.
             $'\177'|$'\b')
-                TEXT[${#TEXT}-1]=${TEXT[${#TEXT}-1]: -1}
-                printf "\e[K%s" "TEXT[${#TEXT}-1]"
+                ((L=${#TEXT[@]}-1))
+                (( ${#TEXT[$L]} == 0 )) || {
+                    TEXT[${#TEXT[@]}-1]=${TEXT[$L]:: -1}
+                    printf -- '\r\e[2K%s' "${TEXT[${#TEXT[@]}-1]}"
+                }
             ;;
             
             '')
@@ -78,6 +81,7 @@ wrap_text() {
 }
 
 get_text
+printf "%s\n" "unwrapped------"
 printf "%s\n" "${TEXT[@]}"
-printf "%s\n" "---------------"
+printf "%s\n" "wrapped--------"
 wrap_text

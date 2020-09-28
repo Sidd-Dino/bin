@@ -1,0 +1,10 @@
+#!/usr/bin/bash
+
+d="$(date '+%a %d %b')"
+t="$(date '+%H:%M')"
+b="$(cat /sys/class/power_supply/BAT0/capacity)"
+b_stat="$(cat /sys/class/power_supply/BAT0/status)"
+b="$b ${b_stat::1}"
+notify-send -u critical "[D] $d
+[T] $t
+[B] $b"

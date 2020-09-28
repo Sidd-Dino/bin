@@ -19,6 +19,6 @@ for FGs in '    m' '   1m' '  30m' '1;30m' '  31m' '1;31m' '  32m' \
 done
 echo
 
-for ((i=0;i<15;i++)); {
+for ((i=0;i<256;i++)); {
 	printf "\e[38;5;%sm%s\n\e[m" "$i" "$i=lol";
 }
