@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# _
+#|_)
+#|_)attify
+
+for((;;)){
+        b_cap="$( < "$BAT_dir/capacity")"
+        (( b_cap <= 10 )) && status
+        read -rt 120 <> <(:) || :
+}

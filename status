@@ -1,10 +1,13 @@
 #!/usr/bin/bash
 
+BAT_dir="/sys/class/power_supply/BAT0"
+
 d="$(date '+%a %d %b')"
 t="$(date '+%H:%M')"
-b="$(cat /sys/class/power_supply/BAT0/capacity)"
-b_stat="$(cat /sys/class/power_supply/BAT0/status)"
-b="$b ${b_stat::1}"
+
+b_cap="$( < "$BAT_dir/capacity")"
+b_stat="$( < "$BAT_dir/status")"
+
 notify-send -u critical "[D] $d
 [T] $t
-[B] $b"
+[B] $b_cap ${b_stat::1}"
