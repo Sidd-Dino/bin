@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+for i in {0..4}; do
+        for j in {1..7}; do
+                printf "\e[38;5;%sm ██████" "$j"
+        done
+        printf "\n\e[m"
+done

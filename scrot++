@@ -41,9 +41,7 @@ available options:
 -w | --window  active window
 -s | --select  selection
 -h | --help    display this information
-
 Default option is 'full screen'.
-
 The file destination can be set in ${_conf}.
 Default is $scrot_dir
 "
@@ -51,15 +49,12 @@ Default is $scrot_dir
 	*)
 		echo "
 == ! i3-scrot: missing or wrong argument ! ==
-
 available options:
 -d | --desk    full screen
 -w | --window  active window
 -s | --select  selection
 -h | --help    display this information
-
 Default option is 'full screen'.
-
 The file destination can be set in ${_conf}.
 Default is $scrot_dir
 "
