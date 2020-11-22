@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+# wllppr
+
+config_file="$HOME/.wllppr.conf"
+files=()
+file_count=0
+
+count_files() {
+        # count the number of files
+        for item in "$pic_dir"/*; do
+                # if not a directory
+                [[ ! -d $item ]] && {
+                        # add to file list
+                        files+=("$item")
+                        ((file_count++))
+                }
+        done
+}
+
+get_config() {
+        # create a default config if
+        # config doesnt exist
+        [[ ! -a $config_file ]] && {
+                echo "pic_dir=$(xdg-user-dir PICTURES)" > "$config_file"
+        }
+
+        source $config_file
+}
+
+set_wallpaper() {
+        # select a random file
+        file_num="$((1 + $RANDOM % $file_count))"
+
+        # set file as wallpaper and
+        # get colorscheme using pywal
+        wal -i "${files[$file_num]}"
+}
+
+main() {
+        get_config
+        count_files
+        set_wallpaper
+}
+
+main "$@"
