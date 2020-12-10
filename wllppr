@@ -24,12 +24,13 @@ get_config() {
                 echo "pic_dir=$(xdg-user-dir PICTURES)" > "$config_file"
         }
 
-        source $config_file
+        source "$config_file"
 }
 
 set_wallpaper() {
         # select a random file
-        file_num="$((1 + $RANDOM % $file_count))"
+        rand="$RANDOM"
+        file_num="$((1 + (rand % file_count) ))"
 
         # set file as wallpaper and
         # get colorscheme using pywal
