@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+
+pid="$( pgrep -f "wllppr_daemon" | head -n 1 )"
+kill -s SIGUSR1 -p "$pid"

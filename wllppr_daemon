@@ -1,0 +1,63 @@
+#!/usr/bin/env bash
+# wllppr
+
+config_file="$HOME/.wllppr.conf"
+files=()
+used_files=()
+file_count=0
+
+get_files() {
+        # count the number of files
+        for item in "$pic_dir"/*; do
+                # if not a directory
+                [[ ! -d $item && "$item" != *"README.md" ]] && {
+                        # add to file list
+                        files+=("$item")
+                        ((file_count++))
+                }
+        done
+}
+
+get_config() {
+        # create a default config if
+        # config doesnt exist
+        [[ ! -a $config_file ]] && {
+                echo "pic_dir=$(xdg-user-dir PICTURES)" > "$config_file"
+        }
+
+        source "$config_file"
+}
+
+interrupt() {
+        #printf "Interrupt caught\n"
+        local file_num file
+        for((;;)) {
+                file_num="$(( RANDOM % file_count ))"
+                (( file_num < 10 )) && file_num="0$file_num"
+                
+                file="${files[10#$file_num]}"
+                [[ "${files[*]}" == *$file* &&\
+                   "${used_files[*]}" != *$file* ]] && {
+                                used_files+=( "$file" )
+                                (( ${#files[@]} == ${#used_files[@]} )) && {
+                                        used_files=()
+                                }
+                                wal -qi "$file"
+                                break
+                }
+        }
+}
+
+main() {
+        trap 'interrupt' SIGUSR1
+
+        get_config
+        get_files
+
+
+        while :; do
+                read -rt 9999 <> <(:) || :
+        done
+}
+
+main "$@"

@@ -80,7 +80,7 @@ wrap_text() {
     done
 }
 
-get_text
+get_text "$@"
 printf "%s\n" "unwrapped------"
 printf "%s\n" "${TEXT[@]}"
 printf "%s\n" "wrapped--------"

@@ -4,7 +4,6 @@
 #|_)attify
 
 for((;;)){
-        b_cap="$( < "$BAT_dir/capacity")"
         status
         read -rt 120 <> <(:) || :
 }
