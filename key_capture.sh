@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
 for ((;;)) do
-
     read -rsn 1
-    printf "R1:%q\n" "${REPLY}"
+    printf "R1:%q %d\n" "${REPLY}" "${#REPLY}"
 
     [[ ${REPLY} == $'\e' ]] && {
             special_keys+=${REPLY}
