@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
-for ((;;)) do
-    read -rsn 1
-    printf "R1:%q %d\n" "${REPLY}" "${#REPLY}"
+key_cap_1() {
+    for ((;;)) do
+        read -rsn 1
+        printf "R1:%q %d\n" "${REPLY}" "${#REPLY}"
 
-    [[ ${REPLY} == $'\e' ]] && {
+        [[ ${REPLY} == $'\e' ]] && {
             special_keys+=${REPLY}
 
             # \e A
@@ -50,4 +51,14 @@ for ((;;)) do
             special_keys=
         }
 
-done
+    done
+}
+
+key_cap_2() {
+    for((;;)){
+        read -rsn 1
+        
+    }
+}
+
+key_cap_1
