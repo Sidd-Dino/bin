@@ -1,9 +1,0 @@
-#!/usr/bin/env bash
-# _
-#|_)
-#|_)attify
-
-for((;;)){
-        status
-        read -rt 120 <> <(:) || :
-}
