@@ -1,0 +1,98 @@
+#!/bin/sh
+
+PROG_NAME="${0##*/}"
+
+cleanup() {
+    xrandr --output "$VIRTUAL" --off 
+    xrandr --delmode "$VIRTUAL" "$VIRTUAL_LANDSCAPE_MODE"
+    xrandr --delmode "$VIRTUAL" "$VIRTUAL_PORTRAIT_MODE"
+    echo "Second monitor disabled."
+
+}
+
+genvncpass() {
+VNCPASS="$(openssl rand -hex 4)"
+
+x11vnc -storepasswd "$VNCPASS" "$HOME/.vnc/passwd"
+printf '%s\n' "$VNCPASS" > "$HOME/.vnc/passwd.plain"
+}
+
+parse_args() {
+    while getopts :S:F:PLlrab opt; do case $opt in
+        \?)
+            printf -- 'usage: %s [options]\n' "$PROG_NAME"
+            printf -- '  -h         Display this help\n'
+            printf -- '  -S <W>x<H> Dimension of the monitor\n'
+            printf -- '  -F <FPS>   FPS of the monitor\n'
+            printf -- '  -P         Potrait orientation\n'
+            printf -- '  -L         Landscape orientation (default)\n\n'
+            printf -- '  -l         Place monitor left of the primary\n'
+            printf -- '  -r         Place monitor right of the primary\n'
+            printf -- '  -a         Place monitor above of the primary\n'
+            printf -- '  -b         Place monitor below of the primary\n'
+        ;;
+
+        S)
+            VIRTUAL_WIDTH="${OPTARG%%x*}"
+            VIRTUAL_HEIGHT="${OPTARG##*x}"
+        ;;
+        F) VIRTUAL_FPS="$OPTARG" ;;
+        P) VIRTUAL_MODE="$VIRTUAL_PORTRAIT_MODE" ;;
+        L) VIRTUAL_MODE="$VIRTUAL_LANDSCAPE_MODE" ;;
+        l) RANDR_POS="--left-of" ;;
+        r) RANDR_POS="--right-of" ;;
+        a) RANDR_POS="--above" ;;
+        b) RANDR_POS="--below" ;;
+
+        :) printf 'Option -%s requires an argument\n' "$OPTARG" >&2 ;;
+    esac; [ -z "${opt##[\?:]}" ] && exit; done
+}
+
+main() {
+    PRIMARY="$(xrandr | awk '/\s*connected\s*primary/ {print $1}')"
+    VIRTUAL="VIRTUAL1"
+    VIRTUAL_LANDSCAPE_MODE="landscape"
+    VIRTUAL_PORTRAIT_MODE="portrait"
+
+    VIRTUAL_WIDTH="1024"
+    VIRTUAL_HEIGHT="768"
+    VIRTUAL_FPS="30"
+    VIRTUAL_MODE="ipad2-landscape"
+    RANDR_POS="--right-of"
+    parse_args "$@"
+
+    trap cleanup EXIT
+
+    set -- $(cvt $VIRTUAL_WIDTH $VIRTUAL_HEIGHT $VIRTUAL_FPS | sed '2s/^.*Modeline\s*\".*\"//;2q;d')
+    VIRTUAL_LANDSCAPE_FLAGS="$*"
+
+    set -- $(cvt $VIRTUAL_HEIGHT $VIRTUAL_WIDTH $VIRTUAL_FPS | sed '2s/^.*Modeline\s*\".*\"//;2q;d')
+    VIRTUAL_PORTRAIT_FLAGS="$*"
+
+    xrandr --addmode "$VIRTUAL" "$VIRTUAL_LANDSCAPE_MODE" &&
+    xrandr --addmode "$VIRTUAL" "$VIRTUAL_PORTRAIT_MODE"  || {
+        xrandr --newmode "$VIRTUAL_LANDSCAPE_MODE" $VIRTUAL_LANDSCAPE_FLAGS
+        xrandr --newmode "$VIRTUAL_PORTRAIT_MODE" $VIRTUAL_PORTRAIT_FLAGS
+
+        xrandr --addmode "$VIRTUAL" "$VIRTUAL_LANDSCAPE_MODE"
+        xrandr --addmode "$VIRTUAL" "$VIRTUAL_PORTRAIT_MODE"
+    }
+
+    xrandr --output "$VIRTUAL" --mode "$VIRTUAL_MODE"
+    sleep 5
+    xrandr --output "$VIRTUAL" "$RANDR_POS" "$PRIMARY"
+
+    VIRTUAL_CLIP_POS="$(xrandr | awk '$0 ~ /'"$VIRTUAL"'\s+connected\s+\d*x\d*\+/ {print $3}')"
+
+    genvncpass
+
+    printf  '%-10s  %s\n' \
+            "$VIRTUAL" "$VIRTUAL_CLIP_POS" \
+            "$VIRTUAL" "$VIRTUAL_LANDSCAPE_MODE : $VIRTUAL_LANDSCAPE_FLAGS" \
+            "$VIRTUAL" "$VIRTUAL_PORTRAIT_MODE : $VIRTUAL_PORTRAIT_FLAGS" \
+            "VNC Pass" "$VNCPASS"
+
+    x11vnc -quiet -multiptr -repeat -clip "$VIRTUAL_CLIP_POS" -rfbauth "$HOME/.vnc/passwd"
+}
+
+main "$@"
