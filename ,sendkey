@@ -9,7 +9,7 @@ err()  { log  9 "[E] $1"; exit 1; }
 
 usage() {
 cat <<__USAGE__
-Usage: ,mkpka [-U user] [-H hostname] [-P port] [-O ssh-options]
+Usage: ,sendkey [-U user] [-H hostname] [-P port] [-O ssh-options]
                 [-i identity-file] [-k keysize] [-t keytype] [-p passphrase]
 __USAGE__
 }
@@ -46,20 +46,16 @@ __HELP__
 share_identity() {
     log "Copying the \"${i}.pub\" identity file to ${U}@${H}"
 
-    {
-        command -v ssh-copy-id >/dev/null \
-        && ssh-copy-id -p ${P} -i "${i}.pub" ${O} ${U}@${H}
-    } || {
-        warn "Command \"ssh-copy-id\" failed or does not exist (ret:$?)"
+    cmd_copyid -p ${P} -i "${i}.pub" ${O} ${U}@${H} || {
         log  "Manually copying the identity file to ${U}@${H}"
 
-        ssh ${O} -p ${P} ${U}@${H} < "${i}.pub" \
+        cmd_ssh ${O} -p ${P} ${U}@${H} < "${i}.pub" \
             'cat >> ~/.ssh/authorized_keys' \
         || err "Failed to copy the identity file to ${U}@${H}"
     }
 
     log "Setting permissions for the identity files on ${U}@${H}"
-    ssh ${O} -p ${P} ${U}@${H} \
+    cmd_ssh ${O} -p ${P} ${U}@${H} \
         "chmod go-w ~ && chmod 700 ~/.ssh && chmod 600 ~/.ssh/authorized_keys" \
     || err "Command \"ssh chmod\" failed (ret:$?)"
 
@@ -80,7 +76,7 @@ gain_identity() {
         warn "Identity file \"${i}\" does not exist"
         log  "Creating the identity file \"${i}\""
 
-        ssh-keygen -t "$t" -b "$k" -f "$i" -N "$p" \
+        cmd_keygen -t "$t" -b "$k" -f "$i" -N "$p" \
         || err "Command \"ssh-keygen\" failed (ret:$?)"
     }
 
@@ -110,17 +106,20 @@ args() {
 main() {
     args "$@"
 
-    for cmd in ssh ssh-keygen; do
-        command -v "${cmd}" >/dev/null \
-        || err "Command \"${cmd}\" not found"
-    done
+    cmd_ssh="$(command -v ssh)" \
+    || err 'Command "ssh" not found'
 
+    cmd_keygen="$(command -v ssh-keygen)" \
+    || err 'Command "ssh-keygen" not found'
+
+    cmd_copyid="$(command -v ssh-copy-id)" \
+    || warn 'Command "ssh-copy-id" not found'
 
     gain_identity
     share_identity
     log "${U}@${H} has accepted the identity ${i}"
     log "${i} has the key information"
-    ssh-keygen -l -f "${i}"
+    cmd_keygen -l -f "${i}"
     log "('v')/ Bye~"
 }
 
