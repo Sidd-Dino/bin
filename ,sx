@@ -1,12 +1,34 @@
 #!/bin/sh
 
-export DISPLAY=${DISPLAY:-:0}
-trap "$HOME/.xinitrc" USR1
+cleanup() {
+    if [ -n "$xpid" ] && kill -0 "$xpid" 2>/dev/null; then
+        kill "$xpid"
+        wait "$xpid"
+        xret=$?
+    fi
 
+    xauth remove :"$tty"
+}
+
+tty="$(tty)"
+tty="${tty#/dev/tty}"
+
+export XAUTHORITY="${XAUTHORITY:-$HOME/.Xauthority}"
+
+trap 'cleanup; exit "${xret:-0}"' EXIT
+
+for sig in HUP INT QUIT TERM; do
+    trap "cleanup; trap - $sig EXIT; kill -s $sig $$" "$sig"
+done
+
+trap 'DISPLAY=:$tty "$HOME/.xinitrc" & wait "$!"' USR1
+
+xauth add :"$tty" MIT-MAGIC-COOKIE-1 "$(od -An -N16 -tx /dev/urandom | tr -d ' ')"
 (
     trap '' USR1
-
-    exec X -keeptty :0
+    exec Xorg :"$tty" vt"$tty" -keeptty -noreset -auth "$XAUTHORITY"
 ) &
 
-wait
+xpid="$!"
+
+wait "$xpid"
