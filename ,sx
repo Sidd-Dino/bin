@@ -14,6 +14,7 @@ tty="$(tty)"
 tty="${tty#/dev/tty}"
 
 export XAUTHORITY="${XAUTHORITY:-$HOME/.Xauthority}"
+export DISPLAY=":${tty}"
 
 trap 'cleanup; exit "${xret:-0}"' EXIT
 
@@ -21,7 +22,7 @@ for sig in HUP INT QUIT TERM; do
     trap "cleanup; trap - $sig EXIT; kill -s $sig $$" "$sig"
 done
 
-trap 'DISPLAY=:$tty "$HOME/.xinitrc" & wait "$!"' USR1
+trap 'DISPLAY=:$tty "$HOME/.xinitrc" "$@" & wait "$!"' USR1
 
 xauth add :"$tty" MIT-MAGIC-COOKIE-1 "$(od -An -N16 -tx /dev/urandom | tr -d ' ')"
 (

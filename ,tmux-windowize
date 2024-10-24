@@ -1,0 +1,12 @@
+#!/bin/sh
+
+[ -z "${1}" ] && exit 1
+[ -d "${1}" ] || exit 1
+
+window_name="$(basename "${1}" | tr '.' '_')"
+session_name="$(tmux display-message -p "#S")"
+
+target="${session_name}:${window_name}"
+
+tmux has-session -t "${target}" 2>/dev/null ||
+	tmux new-window -d -c "${1}" -n "${window_name}"
